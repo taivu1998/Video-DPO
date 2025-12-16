@@ -82,7 +82,6 @@ ipython_config.py
 data/
 logs/
 checkpoints/
-*.gif
 *.mp4
 *.pt
 *.safetensors
@@ -115,7 +114,6 @@ wandb/
 
 # Large datasets and outputs
 outputs/
-results/
 experiments/
 
 # Video/Image files (commonly large)
@@ -123,7 +121,6 @@ experiments/
 *.mov
 *.mkv
 *.webm
-*.png
 *.jpg
 *.jpeg
 
