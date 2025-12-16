@@ -67,6 +67,10 @@ The training curves demonstrate:
 <td><img src="results/comparison_results/comparison_10_base.gif" width="256" alt="Base Model - Sample 10"></td>
 <td><img src="results/comparison_results/comparison_10_dpo.gif" width="256" alt="DPO Model - Sample 10"></td>
 </tr>
+<tr>
+<td><img src="results/comparison_results/comparison_37_base.gif" width="256" alt="Base Model - Sample 37"></td>
+<td><img src="results/comparison_results/comparison_37_dpo.gif" width="256" alt="DPO Model - Sample 37"></td>
+</tr>
 </table>
 
 > *The DPO-aligned model produces smoother frame transitions with reduced flickering artifacts.*
