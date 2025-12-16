@@ -52,16 +52,16 @@ The training curves demonstrate:
 <th>DPO Model (After)</th>
 </tr>
 <tr>
+<td><img src="results/comparison_results/comparison_8_base.gif" width="256" alt="Base Model - Sample 8"></td>
+<td><img src="results/comparison_results/comparison_8_dpo.gif" width="256" alt="DPO Model - Sample 8"></td>
+</tr>
+<tr>
 <td><img src="results/comparison_results/comparison_0_base.gif" width="256" alt="Base Model - Mountain Sunset"></td>
 <td><img src="results/comparison_results/comparison_0_dpo.gif" width="256" alt="DPO Model - Mountain Sunset"></td>
 </tr>
 <tr>
 <td><img src="results/comparison_results/comparison_1_base.gif" width="256" alt="Base Model - Sample 1"></td>
 <td><img src="results/comparison_results/comparison_1_dpo.gif" width="256" alt="DPO Model - Sample 1"></td>
-</tr>
-<tr>
-<td><img src="results/comparison_results/comparison_2_base.gif" width="256" alt="Base Model - Sample 2"></td>
-<td><img src="results/comparison_results/comparison_2_dpo.gif" width="256" alt="DPO Model - Sample 2"></td>
 </tr>
 <tr>
 <td><img src="results/comparison_results/comparison_3_base.gif" width="256" alt="Base Model - Sample 3"></td>
