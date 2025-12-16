@@ -1,0 +1,40 @@
+# Test configuration with reduced samples for quick validation
+# Use this to verify the pipeline works before running full training
+
+experiment_name: "video_dpo_test"
+output_dir: "./checkpoints_test"
+log_dir: "./logs_test"
+
+data:
+  root_dir: "./data/latents_test"
+  num_pairs: 5  # Just 5 pairs for testing
+  num_frames: 16
+  resolution: 512
+  jitter_strength: 0.15
+  jitter_method: "noise"
+  prompt: "cinematic shot, high quality, 8k, smooth motion"
+
+model:
+  base_model: "emilianJR/epiCRealism"
+  motion_adapter: "guoyww/animatediff-motion-adapter-v1-5-2"
+  lora_rank: 8  # Lower rank for faster testing
+  lora_alpha: 16
+  target_modules:
+    - "to_q"
+    - "to_k"
+    - "to_v"
+    - "to_out.0"
+  target_modules_pattern: ".*motion_modules.*"
+
+training:
+  seed: 42
+  batch_size: 1
+  gradient_accumulation_steps: 1  # No accumulation for testing
+  learning_rate: 1.0e-5
+  max_train_steps: 20  # Just 20 steps
+  beta: 2500
+  mixed_precision: "fp16"
+  save_steps: 10
+  logging_steps: 5
+  max_grad_norm: 1.0
+  memory_optimized: true  # Use adapter toggling for testing

@@ -1,0 +1,143 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Translations
+*.mo
+*.pot
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.spyderproject
+.spyproject
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# Project specific
+data/
+logs/
+checkpoints/
+*.gif
+*.mp4
+*.pt
+*.safetensors
+*.bin
+
+# Model weights (large files)
+*.ckpt
+models/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Hugging Face cache
+.cache/
+
+# Accelerate config
+accelerate_config.yaml
+
+# Heavy notebook files (with embedded outputs/media)
+Video_DPO_Colab_V2.ipynb
+
+# Weights & Biases
+wandb/
+
+# Large datasets and outputs
+outputs/
+results/
+experiments/
+
+# Video/Image files (commonly large)
+*.avi
+*.mov
+*.mkv
+*.webm
+*.png
+*.jpg
+*.jpeg
+
+# Large compressed files
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+
+# HuggingFace model downloads
+*.h5
+*.onnx
+
+# PyTorch Lightning
+lightning_logs/

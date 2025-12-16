@@ -1,0 +1,48 @@
+# Video-DPO Training Configuration for L4 GPU (24GB VRAM)
+# Balanced settings for quality and memory efficiency
+
+experiment_name: "video_dpo_l4"
+output_dir: "./checkpoints"
+log_dir: "./logs"
+
+data:
+  root_dir: "./data/latents"
+  num_pairs: 50
+  num_frames: 16
+  resolution: 512
+  jitter_strength: 0.15
+  jitter_method: "noise"
+  prompts:
+    - "cinematic shot, smooth motion, high quality, 8k"
+    - "drone footage flying over mountains, smooth camera, film quality"
+    - "slow motion video of water flowing, detailed, seamless"
+    - "timelapse of sunset clouds, smooth transition, vibrant colors"
+    - "walking through autumn forest, steady cam, golden hour lighting"
+    - "ocean waves crashing on beach, smooth motion, aerial view"
+    - "city street at night, smooth camera movement, neon lights"
+    - "wildlife documentary shot, smooth tracking, nature footage"
+
+model:
+  base_model: "emilianJR/epiCRealism"
+  motion_adapter: "guoyww/animatediff-motion-adapter-v1-5-2"
+  lora_rank: 16
+  lora_alpha: 32
+  target_modules:
+    - "to_q"
+    - "to_k"
+    - "to_v"
+    - "to_out.0"
+  target_modules_pattern: ".*motion_modules.*"
+
+training:
+  seed: 42
+  batch_size: 1
+  gradient_accumulation_steps: 4
+  learning_rate: 1.0e-5
+  max_train_steps: 200
+  beta: 2500
+  mixed_precision: "fp16"
+  save_steps: 50
+  logging_steps: 10
+  max_grad_norm: 1.0
+  memory_optimized: true  # Use adapter toggling for memory efficiency

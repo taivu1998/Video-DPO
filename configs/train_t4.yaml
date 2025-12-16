@@ -1,0 +1,45 @@
+# Video-DPO Training Configuration for T4 GPU (16GB VRAM)
+# Optimized for low memory usage with reduced parameters
+
+experiment_name: "video_dpo_t4"
+output_dir: "./checkpoints"
+log_dir: "./logs"
+
+data:
+  root_dir: "./data/latents"
+  num_pairs: 10
+  num_frames: 8  # Reduced for memory
+  resolution: 256  # Reduced for memory
+  jitter_strength: 0.15
+  jitter_method: "noise"  # Faster than img2img
+  # Multiple diverse prompts for better generalization
+  prompts:
+    - "cinematic shot, smooth motion, high quality, 8k"
+    - "drone footage flying over mountains, smooth camera, film quality"
+    - "slow motion video of water flowing, detailed, seamless"
+    - "timelapse of sunset clouds, smooth transition, vibrant colors"
+
+model:
+  base_model: "emilianJR/epiCRealism"
+  motion_adapter: "guoyww/animatediff-motion-adapter-v1-5-2"
+  lora_rank: 4  # Smaller LoRA for memory efficiency
+  lora_alpha: 8
+  target_modules:
+    - "to_q"
+    - "to_k"
+    - "to_v"
+    - "to_out.0"
+  target_modules_pattern: ".*motion_modules.*"
+
+training:
+  seed: 42
+  batch_size: 1
+  gradient_accumulation_steps: 2
+  learning_rate: 1.0e-5
+  max_train_steps: 50
+  beta: 2500
+  mixed_precision: "fp16"
+  save_steps: 25
+  logging_steps: 5
+  max_grad_norm: 1.0
+  memory_optimized: true  # Use adapter toggling instead of deep copy

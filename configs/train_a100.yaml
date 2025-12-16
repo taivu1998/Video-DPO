@@ -1,0 +1,48 @@
+# Video-DPO Training Configuration for A100 GPU (40GB+ VRAM)
+# Optimized for best quality with more data and larger model capacity
+
+experiment_name: "video_dpo_a100"
+output_dir: "./checkpoints"
+log_dir: "./logs"
+
+data:
+  root_dir: "./data/latents"
+  num_pairs: 200
+  num_frames: 16
+  resolution: 512
+  jitter_strength: 0.15
+  jitter_method: "noise"
+  prompts:
+    - "cinematic shot, smooth motion, high quality, 8k"
+    - "drone footage flying over mountains, smooth camera, film quality"
+    - "slow motion video of water flowing, detailed, seamless"
+    - "timelapse of sunset clouds, smooth transition, vibrant colors"
+    - "walking through autumn forest, steady cam, golden hour lighting"
+    - "ocean waves crashing on beach, smooth motion, aerial view"
+    - "city street at night, smooth camera movement, neon lights"
+    - "wildlife documentary shot, smooth tracking, nature footage"
+
+model:
+  base_model: "emilianJR/epiCRealism"
+  motion_adapter: "guoyww/animatediff-motion-adapter-v1-5-2"
+  lora_rank: 32  # Higher capacity for better quality
+  lora_alpha: 64
+  target_modules:
+    - "to_q"
+    - "to_k"
+    - "to_v"
+    - "to_out.0"
+  target_modules_pattern: ".*motion_modules.*"
+
+training:
+  seed: 42
+  batch_size: 1
+  gradient_accumulation_steps: 4
+  learning_rate: 1.0e-5
+  max_train_steps: 500  # Longer training for better results
+  beta: 2500
+  mixed_precision: "fp16"
+  save_steps: 100
+  logging_steps: 10
+  max_grad_norm: 1.0
+  memory_optimized: false  # A100 has enough memory for deep copy

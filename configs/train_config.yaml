@@ -1,0 +1,53 @@
+experiment_name: "video_dpo_temporal_v1"
+output_dir: "./checkpoints"
+log_dir: "./logs"
+
+data:
+  root_dir: "./data/latents"
+  num_pairs: 500
+  num_frames: 16
+  resolution: 512
+  jitter_strength: 0.15  # Amount of temporal jitter for loser videos
+  jitter_method: "noise"  # "noise" (fast) or "img2img" (higher quality)
+  # Multiple diverse prompts for better generalization
+  # If using single prompt, use "prompt:" instead of "prompts:"
+  prompts:
+    - "cinematic shot, smooth motion, high quality, 8k"
+    - "drone footage flying over mountains, smooth camera, film quality"
+    - "slow motion video of water flowing, detailed, seamless"
+    - "timelapse of sunset clouds, smooth transition, vibrant colors"
+    - "walking through autumn forest, steady cam, golden hour lighting"
+    - "ocean waves crashing on beach, smooth motion, aerial view"
+    - "city street at night, smooth camera movement, neon lights"
+    - "wildlife documentary shot, smooth tracking, nature footage"
+
+model:
+  base_model: "emilianJR/epiCRealism"
+  motion_adapter: "guoyww/animatediff-motion-adapter-v1-5-2"
+  lora_rank: 16
+  lora_alpha: 32
+  # Target ONLY AnimateDiff temporal layers (motion module attention projections)
+  # Using regex patterns for PEFT LoRA targeting
+  target_modules:
+    - "to_q"
+    - "to_k"
+    - "to_v"
+    - "to_out.0"
+  # Regex pattern to filter only motion_modules
+  target_modules_pattern: ".*motion_modules.*"
+
+training:
+  seed: 42
+  batch_size: 1  # Effective BS=4 with GradAccum
+  gradient_accumulation_steps: 4
+  learning_rate: 1.0e-5
+  max_train_steps: 1000
+  beta: 2500  # DPO Scalar
+  mixed_precision: "fp16"
+  save_steps: 200
+  logging_steps: 10
+  max_grad_norm: 1.0  # Gradient clipping
+  # Memory optimization: use adapter toggling instead of deep copy
+  # Reduces GPU memory by ~50% but slightly slower training
+  # Recommended for GPUs with <40GB VRAM
+  memory_optimized: false
