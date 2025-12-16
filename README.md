@@ -64,8 +64,8 @@ The training curves demonstrate:
 <td><img src="results/comparison_results/comparison_1_dpo.gif" width="256" alt="DPO Model - Sample 1"></td>
 </tr>
 <tr>
-<td><img src="results/comparison_results/comparison_3_base.gif" width="256" alt="Base Model - Sample 3"></td>
-<td><img src="results/comparison_results/comparison_3_dpo.gif" width="256" alt="DPO Model - Sample 3"></td>
+<td><img src="results/comparison_results/comparison_10_base.gif" width="256" alt="Base Model - Sample 10"></td>
+<td><img src="results/comparison_results/comparison_10_dpo.gif" width="256" alt="DPO Model - Sample 10"></td>
 </tr>
 </table>
 
