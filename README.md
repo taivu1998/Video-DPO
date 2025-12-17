@@ -1,4 +1,4 @@
-# Video-DPO: Temporal Consistency Alignment for Video Diffusion
+# Video-DPO: Temporal Consistency Alignment for Video Diffusion via Direct Preference Optimization
 
 <p align="center">
   <img src="https://img.shields.io/badge/PyTorch-2.1+-red?logo=pytorch" alt="PyTorch">
