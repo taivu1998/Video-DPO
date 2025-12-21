@@ -27,8 +27,8 @@ Our DPO-aligned model achieves significant improvements in temporal consistency 
 
 | Metric | Base Model | DPO Model | Improvement |
 |:------:|:----------:|:---------:|:-----------:|
-| **Warping Error** ↓ | 150.32 | 111.62 | **-25.7%** |
-| **Frame Difference** ↓ | 7.20 | 5.88 | **-18.3%** |
+| **Warping Error** ↓ | 150.32 | 111.62 | **25.7%** |
+| **Frame Difference** ↓ | 7.20 | 5.88 | **18.3%** |
 
 > *Lower values indicate better temporal consistency. Evaluated on 47 diverse video samples.*
 
