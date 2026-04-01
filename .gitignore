@@ -139,3 +139,6 @@ experiments/
 
 # PyTorch Lightning
 lightning_logs/
+
+# Local planning notes
+IMPROVEMENT_PLAN.local.md

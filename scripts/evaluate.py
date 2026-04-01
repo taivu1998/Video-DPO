@@ -23,16 +23,11 @@ from tqdm import tqdm
 import argparse
 
 sys.path.append(os.getcwd())
-from src.config_parser import load_config
+from src.config import resolve_checkpoint_path, resolve_prompt_override
+from src.config_parser import add_common_args, load_config_from_namespace
+from src.devices import get_device, get_generator
 from src.model import VideoDPOModelWrapper
-from src.utils import get_device, seed_everything
-
-
-def get_generator(seed: int, device: torch.device) -> torch.Generator:
-    """Create a generator compatible with the device."""
-    if device.type == "mps":
-        return torch.Generator("cpu").manual_seed(seed)
-    return torch.Generator(device).manual_seed(seed)
+from src.utils import seed_everything
 
 
 def pil_to_tensor(pil_image: Image.Image) -> torch.Tensor:
@@ -186,19 +181,16 @@ def compute_frame_difference_metric(frames: list) -> float:
 
 
 def main():
-    # Parse additional args
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", type=str, required=True)
-    parser.add_argument("--checkpoint", type=str, required=True)
+    add_common_args(parser, include_checkpoint=True, include_seed=True, include_num_frames=True)
+    parser.add_argument("--prompt", type=str, default=None, help="Prompt override for evaluation")
+    parser.add_argument("--prompt-index", type=int, default=None, help="Index into data.prompts")
     parser.add_argument("--num_samples", type=int, default=20, help="Number of samples to evaluate")
     parser.add_argument("--output_dir", type=str, default="./evaluation_results")
     args = parser.parse_args()
 
-    # Load config manually to avoid conflict with load_config
-    import yaml
-    with open(args.config, 'r') as f:
-        config = yaml.safe_load(f)
-    config['inference_checkpoint'] = args.checkpoint
+    config = load_config_from_namespace(args, profile="evaluate")
+    checkpoint = resolve_checkpoint_path(config, args.checkpoint)
 
     device = get_device()
     seed_everything(config['training']['seed'])
@@ -207,19 +199,23 @@ def main():
     print("Video-DPO Evaluation")
     print("="*60)
     print(f"Device: {device}")
-    print(f"Checkpoint: {args.checkpoint}")
+    print(f"Checkpoint: {checkpoint}")
     print(f"Number of samples: {args.num_samples}")
     print()
 
-    if not os.path.exists(args.checkpoint):
-        print(f"Error: Checkpoint not found at {args.checkpoint}")
+    if not checkpoint:
+        print("Error: Provide --checkpoint path or set inference_checkpoint in config")
+        return
+
+    if not os.path.exists(checkpoint):
+        print(f"Error: Checkpoint not found at {checkpoint}")
         return
 
     os.makedirs(args.output_dir, exist_ok=True)
 
     wrapper = VideoDPOModelWrapper(config)
     num_frames = config['data'].get('num_frames', 16)
-    prompt = config['data']['prompt']
+    prompt = resolve_prompt_override(config, prompt=args.prompt, prompt_index=args.prompt_index)
 
     # Results storage
     base_warping_errors = []
@@ -259,7 +255,7 @@ def main():
 
     # Load DPO pipeline
     print("\nLoading DPO Model...")
-    pipe_dpo = wrapper.get_inference_pipeline(device, lora_path=args.checkpoint)
+    pipe_dpo = wrapper.get_inference_pipeline(device, lora_path=checkpoint)
 
     print("Evaluating DPO Model...")
     for seed in tqdm(range(args.num_samples), desc="DPO Model"):
@@ -319,7 +315,7 @@ def main():
     # Save detailed results
     results = {
         "config": args.config,
-        "checkpoint": args.checkpoint,
+        "checkpoint": checkpoint,
         "num_samples": args.num_samples,
         "base_warping_errors": base_warping_errors,
         "dpo_warping_errors": dpo_warping_errors,

@@ -1,4 +1,4 @@
-.PHONY: install setup-accelerate clean data train inference evaluate all test-imports test-data test-train test-all validate-data
+.PHONY: install setup-accelerate clean data train inference evaluate all test-imports test-data test-train test-all validate-data test-unit
 
 # ============================================
 # INSTALLATION
@@ -43,6 +43,10 @@ evaluate:
 
 # Run full pipeline
 all: data train inference evaluate
+
+# Fast unit tests that avoid model downloads
+test-unit:
+	python -m unittest discover -s tests -p 'test_*.py'
 
 # Validate generated data
 validate-data:

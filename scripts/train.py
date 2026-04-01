@@ -4,14 +4,16 @@ from accelerate import Accelerator
 from torch.utils.data import DataLoader
 
 sys.path.append(os.getcwd())
-from src.config_parser import load_config
+from src.config_parser import build_common_parser, load_config_from_namespace
 from src.utils import seed_everything, setup_logger
 from src.dataset import VideoDPODataset
 from src.model import VideoDPOModelWrapper
 from src.trainer import DPOTrainer
 
 def main():
-    config = load_config()
+    parser = build_common_parser(include_seed=True)
+    args = parser.parse_args()
+    config = load_config_from_namespace(args, profile="train")
 
     # Create output directories
     os.makedirs(config['output_dir'], exist_ok=True)

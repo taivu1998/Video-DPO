@@ -5,20 +5,22 @@ import argparse
 from diffusers.utils import export_to_gif
 
 sys.path.append(os.getcwd())
-from src.config_parser import load_config
+from src.config import resolve_checkpoint_path, resolve_prompt_override
+from src.config_parser import add_common_args, load_config_from_namespace
+from src.devices import get_device, get_generator
 from src.model import VideoDPOModelWrapper
-from src.utils import get_device
-
-def get_generator(seed: int, device: torch.device) -> torch.Generator:
-    """Create a generator compatible with the device (MPS requires CPU generator)."""
-    if device.type == "mps":
-        return torch.Generator("cpu").manual_seed(seed)
-    return torch.Generator(device).manual_seed(seed)
 
 def main():
-    config = load_config()
+    parser = argparse.ArgumentParser()
+    add_common_args(parser, include_checkpoint=True, include_seed=True, include_num_frames=True)
+    parser.add_argument("--prompt", type=str, default=None, help="Prompt override for generation")
+    parser.add_argument("--prompt-index", type=int, default=None, help="Index into data.prompts")
+    parser.add_argument("--output-dir", type=str, default=None, help="Directory for generated GIFs")
+    args = parser.parse_args()
+
+    config = load_config_from_namespace(args, profile="inference")
     device = get_device()
-    checkpoint = config.get('inference_checkpoint')
+    checkpoint = resolve_checkpoint_path(config, args.checkpoint)
 
     if not checkpoint:
         print("Error: Provide --checkpoint path")
@@ -34,14 +36,14 @@ def main():
 
     wrapper = VideoDPOModelWrapper(config)
     num_frames = config['data'].get('num_frames', 16)
-    prompt = config['data']['prompt']
+    prompt = resolve_prompt_override(config, prompt=args.prompt, prompt_index=args.prompt_index)
     seed = config['training'].get('seed', 42)
 
     print(f"Prompt: {prompt}")
     print(f"Seed: {seed}")
 
     # Create output directory
-    output_dir = config.get('output_dir', './checkpoints')
+    output_dir = args.output_dir or config.get('output_dir', './checkpoints')
     os.makedirs(output_dir, exist_ok=True)
 
     # 1. Base Model (Left Side)

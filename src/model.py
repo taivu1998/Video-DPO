@@ -1,16 +1,20 @@
 import torch
-import re
 import gc
 from diffusers import MotionAdapter, AnimateDiffPipeline
 from diffusers.schedulers import DDIMScheduler
 from peft import LoraConfig, get_peft_model, PeftModel
 import copy
 
+from src.devices import get_device, resolve_torch_dtype
+
 class VideoDPOModelWrapper:
     def __init__(self, config: dict):
         self.config = config
         # Memory-optimized mode uses adapter toggling instead of deep copy
         self.memory_optimized = config.get('training', {}).get('memory_optimized', False)
+
+    def _resolve_model_dtype(self, device=None) -> torch.dtype:
+        return resolve_torch_dtype(self.config, device=device or get_device())
 
     def _get_motion_module_names(self, model) -> list:
         """
@@ -47,8 +51,7 @@ class VideoDPOModelWrapper:
         gc.collect()
 
         print("Loading Motion Adapter...")
-        # 1. Load Motion Adapter - use fp16 for memory efficiency
-        dtype = torch.float16 if self.memory_optimized else torch.float32
+        dtype = self._resolve_model_dtype()
         adapter = MotionAdapter.from_pretrained(
             self.config['model']['motion_adapter'],
             torch_dtype=dtype
@@ -134,14 +137,15 @@ class VideoDPOModelWrapper:
 
     def get_inference_pipeline(self, device, lora_path=None):
         """Load inference pipeline with optional LoRA weights."""
+        dtype = self._resolve_model_dtype(device)
         adapter = MotionAdapter.from_pretrained(
             self.config['model']['motion_adapter'],
-            torch_dtype=torch.float16
+            torch_dtype=dtype
         )
         pipe = AnimateDiffPipeline.from_pretrained(
             self.config['model']['base_model'],
             motion_adapter=adapter,
-            torch_dtype=torch.float16
+            torch_dtype=dtype
         )
 
         # Use DDIM for faster inference

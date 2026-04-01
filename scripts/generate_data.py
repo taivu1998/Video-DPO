@@ -9,26 +9,10 @@ from tqdm import tqdm
 from PIL import Image
 
 sys.path.append(os.getcwd())
-from src.config_parser import load_config
-from src.utils import seed_everything, get_device
-
-# Default diverse prompts for better generalization
-DEFAULT_TRAINING_PROMPTS = [
-    "cinematic shot, smooth motion, high quality, 8k",
-    "drone footage flying over mountains, smooth camera, film quality",
-    "slow motion video of water flowing, detailed, seamless",
-    "timelapse of sunset clouds, smooth transition, vibrant colors",
-    "walking through autumn forest, steady cam, golden hour lighting",
-    "ocean waves crashing on beach, smooth motion, aerial view",
-    "city street at night, smooth camera movement, neon lights",
-    "wildlife documentary shot, smooth tracking, nature footage",
-]
-
-def get_generator(seed: int, device: torch.device) -> torch.Generator:
-    """Create a generator compatible with the device (MPS requires CPU generator)."""
-    if device.type == "mps":
-        return torch.Generator("cpu").manual_seed(seed)
-    return torch.Generator(device).manual_seed(seed)
+from src.config import DEFAULT_TRAINING_PROMPTS, get_prompt_list
+from src.config_parser import build_common_parser, load_config_from_namespace
+from src.devices import get_device, get_generator, resolve_torch_dtype
+from src.utils import seed_everything
 
 def add_temporal_jitter(frames: torch.Tensor, jitter_strength: float = 0.15) -> torch.Tensor:
     """
@@ -55,7 +39,9 @@ def add_temporal_jitter(frames: torch.Tensor, jitter_strength: float = 0.15) -> 
     return jittered
 
 def main():
-    config = load_config()
+    parser = build_common_parser(include_seed=True)
+    args = parser.parse_args()
+    config = load_config_from_namespace(args, profile="generate")
     device = get_device()
     seed_everything(config['training']['seed'])
 
@@ -69,19 +55,9 @@ def main():
     jitter_strength = data_config.get('jitter_strength', 0.15)
     jitter_method = data_config.get('jitter_method', 'noise')  # 'noise' or 'img2img'
 
-    # Get prompts - support multiple prompts for diversity
-    prompts = data_config.get('prompts', None)
-    if prompts is None:
-        # Fall back to single prompt or default prompts
-        single_prompt = data_config.get('prompt', None)
-        if single_prompt:
-            prompts = [single_prompt]
-        else:
-            prompts = DEFAULT_TRAINING_PROMPTS
-            print("Using default diverse training prompts")
-
-    if isinstance(prompts, str):
-        prompts = [prompts]
+    prompts = get_prompt_list(config, fallback=DEFAULT_TRAINING_PROMPTS)
+    if config["data"].get("prompts") == []:
+        print("Using default diverse training prompts")
 
     print(f"\nData Generation Configuration:")
     print(f"  - Pairs: {num_pairs}")
@@ -91,16 +67,18 @@ def main():
     print(f"  - Jitter strength: {jitter_strength}")
     print(f"  - Prompts: {len(prompts)} diverse prompts")
 
+    model_dtype = resolve_torch_dtype(config, device)
+
     # 1. Load AnimateDiff (Winner Generator)
     print("\nLoading AnimateDiff Pipeline...")
     adapter = MotionAdapter.from_pretrained(
         config['model']['motion_adapter'],
-        torch_dtype=torch.float16
+        torch_dtype=model_dtype
     )
     pipe_winner = AnimateDiffPipeline.from_pretrained(
         config['model']['base_model'],
         motion_adapter=adapter,
-        torch_dtype=torch.float16
+        torch_dtype=model_dtype
     ).to(device)
 
     # Use DDIM scheduler for faster generation
@@ -117,7 +95,7 @@ def main():
         print("Loading Img2Img Pipeline for jitter generation...")
         pipe_loser = StableDiffusionImg2ImgPipeline.from_pretrained(
             config['model']['base_model'],
-            torch_dtype=torch.float16,
+            torch_dtype=model_dtype,
             safety_checker=None
         ).to(device)
 
@@ -132,7 +110,7 @@ def main():
         tensors = torch.stack([
             torch.from_numpy(np.array(f.convert("RGB"))).permute(2, 0, 1).float() / 127.5 - 1.0
             for f in pil_frames
-        ]).to(device, dtype=torch.float16)
+        ]).to(device, dtype=model_dtype)
 
         with torch.no_grad():
             latents = vae.encode(tensors).latent_dist.sample() * vae.config.scaling_factor
@@ -143,7 +121,7 @@ def main():
     def encode_tensor_frames(tensor_frames: torch.Tensor) -> torch.Tensor:
         """Encode tensor frames [F, C, H, W] in [0, 1] range to latent space."""
         # Convert from [0, 1] to [-1, 1]
-        tensors = (tensor_frames * 2 - 1).to(device, dtype=torch.float16)
+        tensors = (tensor_frames * 2 - 1).to(device, dtype=model_dtype)
 
         with torch.no_grad():
             latents = vae.encode(tensors).latent_dist.sample() * vae.config.scaling_factor
